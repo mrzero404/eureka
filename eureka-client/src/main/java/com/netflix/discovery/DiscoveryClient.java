@@ -1140,14 +1140,14 @@ public class DiscoveryClient implements EurekaClient {
         if (delta == null) {
             logger.warn("The server does not allow the delta revision to be applied because it is not safe. "
                     + "Hence got the full registry.");
-            getAndStoreFullRegistry();
+            getAndStoreFullRegistry();//如果是null的话，就会拿全量的注册表
         } else if (fetchRegistryGeneration.compareAndSet(currentUpdateGeneration, currentUpdateGeneration + 1)) {
             logger.debug("Got delta update with apps hashcode {}", delta.getAppsHashCode());
             String reconcileHashCode = "";
             if (fetchRegistryUpdateLock.tryLock()) {
                 try {
-                    updateDelta(delta);
-                    reconcileHashCode = getReconcileHashCode(applications);
+                    updateDelta(delta);//更新增量的注册表
+                    reconcileHashCode = getReconcileHashCode(applications);//获取协调哈希码  Reconcile-调和
                 } finally {
                     fetchRegistryUpdateLock.unlock();
                 }
@@ -1214,6 +1214,7 @@ public class DiscoveryClient implements EurekaClient {
             return;
         }
 
+        //CAS比对是否被其他线程更新过
         if (fetchRegistryGeneration.compareAndSet(currentUpdateGeneration, currentUpdateGeneration + 1)) {
             localRegionApps.set(this.filterAndShuffle(serverApps));
             getApplications().setVersion(delta.getVersion());

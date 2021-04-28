@@ -190,6 +190,7 @@ public class EurekaBootStrap implements ServletContextListener {
             );
         }
 
+        //第四步：处理peer节点相关事情
         PeerEurekaNodes peerEurekaNodes = getPeerEurekaNodes(
                 registry,
                 eurekaServerConfig,
@@ -198,6 +199,7 @@ public class EurekaBootStrap implements ServletContextListener {
                 applicationInfoManager
         );
 
+        //第五步：完成eureka
         serverContext = new DefaultEurekaServerContext(
                 eurekaServerConfig,
                 serverCodecs,

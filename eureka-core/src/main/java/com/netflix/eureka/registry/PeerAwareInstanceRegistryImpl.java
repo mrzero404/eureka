@@ -79,6 +79,7 @@ import static com.netflix.eureka.Names.METRIC_REGISTRY_PREFIX;
  * {@link com.netflix.eureka.EurekaServerConfig#getWaitTimeInMsWhenSyncEmpty()}.
  * </p>
  *
+ *  如果说当前eureka server获取
  * <p>
  * One important thing to note about <em>renewals</em>.If the renewal drops more
  * than the specified threshold as specified in
