@@ -301,6 +301,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             Map<String, Lease<InstanceInfo>> gMap = registry.get(appName);
             Lease<InstanceInfo> leaseToCancel = null;
             if (gMap != null) {
+                //将服务实例从EurekaServer的map结构注册表中移除
                 leaseToCancel = gMap.remove(id);
             }
             recentCanceledQueue.add(new Pair<Long, String>(System.currentTimeMillis(), appName + "(" + id + ")"));
@@ -319,11 +320,15 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 String svip = null;
                 if (instanceInfo != null) {
                     instanceInfo.setActionType(ActionType.DELETED);
+                    //将服务实例信息扔到最近改变的队列中去
+                    //服务的注册、下线、故障摘除，都会代表这个服务实例变化了，都会将自己放入最近改变的队列中去
+                    //这个队列只会保存最近180秒的服务实例，Eureka拉取的增量数据就是最近180秒有变化的服务实例的注册表
                     recentlyChangedQueue.add(new RecentlyChangedItem(leaseToCancel));
                     instanceInfo.setLastUpdatedTimestamp();
                     vip = instanceInfo.getVIPAddress();
                     svip = instanceInfo.getSecureVipAddress();
                 }
+                //过期掉下线的readWriteCacheMap缓存
                 invalidateCache(appName, vip, svip);
                 logger.info("Cancelled instance {}/{} (replication={})", appName, id, isReplication);
             }
@@ -1346,6 +1351,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 Iterator<RecentlyChangedItem> it = recentlyChangedQueue.iterator();
                 while (it.hasNext()) {
                     if (it.next().getLastUpdateTime() <
+                            //将入队时间大于180秒的元素移除掉
                             System.currentTimeMillis() - serverConfig.getRetentionTimeInMSInDeltaQueue()) {
                         it.remove();
                     } else {

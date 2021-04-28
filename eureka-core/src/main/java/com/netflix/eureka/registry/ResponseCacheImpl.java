@@ -166,6 +166,7 @@ public class ResponseCacheImpl implements ResponseCache {
         }
     }
 
+    //每隔30秒同步readWriteCacheMap到readOnlyCacheMap中去
     private TimerTask getCacheUpdateTask() {
         return new TimerTask() {
             @Override

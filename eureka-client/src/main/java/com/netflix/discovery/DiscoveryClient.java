@@ -938,6 +938,7 @@ public class DiscoveryClient implements EurekaClient {
                 applicationInfoManager.unregisterStatusChangeListener(statusChangeListener.getId());
             }
 
+            //将线程池都给showdown掉，释放资源停止运行的线程
             cancelScheduledTasks();
 
             // If APPINFO was registered
