@@ -1135,6 +1135,7 @@ public class DiscoveryClient implements EurekaClient {
         Applications delta = null;
         EurekaHttpResponse<Applications> httpResponse = eurekaTransport.queryClient.getDelta(remoteRegionsRef.get());
         if (httpResponse.getStatusCode() == Status.OK.getStatusCode()) {
+            //获取增量注册表和全量注册表的hash值
             delta = httpResponse.getEntity();
         }
 
@@ -1147,8 +1148,8 @@ public class DiscoveryClient implements EurekaClient {
             String reconcileHashCode = "";
             if (fetchRegistryUpdateLock.tryLock()) {
                 try {
-                    updateDelta(delta);//更新增量的注册表
-                    reconcileHashCode = getReconcileHashCode(applications);//获取协调哈希码  Reconcile-调和
+                    updateDelta(delta);//合并增量的注册表
+                    reconcileHashCode = getReconcileHashCode(applications);//获取合并后的注册表hash值
                 } finally {
                     fetchRegistryUpdateLock.unlock();
                 }
@@ -1156,6 +1157,7 @@ public class DiscoveryClient implements EurekaClient {
                 logger.warn("Cannot acquire update lock, aborting getAndUpdateDelta");
             }
             // There is a diff in number of instances for some reason
+            //如果本地哈希值与服务器哈希值不一致则重新拉取完整的注册表信息
             if (!reconcileHashCode.equals(delta.getAppsHashCode()) || clientConfig.shouldLogDeltaDiff()) {
                 reconcileAndLogDifference(delta, reconcileHashCode);  // this makes a remoteCall
             }
@@ -1299,8 +1301,10 @@ public class DiscoveryClient implements EurekaClient {
      * Initializes all scheduled tasks.
      */
     private void initScheduledTasks() {
+        //设置调度，默认每隔30秒抓取增量的注册表
         if (clientConfig.shouldFetchRegistry()) {
             // registry cache refresh timer
+            //获取配置抓取时间
             int registryFetchIntervalSeconds = clientConfig.getRegistryFetchIntervalSeconds();
             int expBackOffBound = clientConfig.getCacheRefreshExecutorExponentialBackOffBound();
             cacheRefreshTask = new TimedSupervisorTask(

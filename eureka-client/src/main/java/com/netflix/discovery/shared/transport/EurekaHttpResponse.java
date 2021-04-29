@@ -96,7 +96,7 @@ public class EurekaHttpResponse<T> {
         private T entity;
         private Map<String, String> headers;
 
-        private EurekaHttpResponseBuilder(int statusCode) {
+        private  EurekaHttpResponseBuilder(int statusCode) {
             this.statusCode = statusCode;
         }
 
