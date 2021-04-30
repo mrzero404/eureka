@@ -615,14 +615,18 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
         // To compensate for GC pauses or drifting local time, we need to use current registry size as a base for
         // triggering self-preservation. Without that we would wipe out full registry.
+        //获取注册表的实例数 （假设有20个）
         int registrySize = (int) getLocalRegistrySize();
+        //计算注册表大小的阈值 = 注册表的实例数 * 0.85 （20*0.85=17）
         int registrySizeThreshold = (int) (registrySize * serverConfig.getRenewalPercentThreshold());
+        //摘除的限制数 = 实例数 - 阈值  （20-17=3）
         int evictionLimit = registrySize - registrySizeThreshold;
-
+        //获取过期列表与摘除限制数较小的一个 （假设过期列表有6个，3<6,此时会获取较小的摘除限制数3）
         int toEvict = Math.min(expiredLeases.size(), evictionLimit);
         if (toEvict > 0) {
             logger.info("Evicting {} items (expired={}, evictionLimit={})", toEvict, expiredLeases.size(), evictionLimit);
 
+            //在过期列表中随机摘除3个服务实例
             Random random = new Random(System.currentTimeMillis());
             for (int i = 0; i < toEvict; i++) {
                 // Pick a random item (Knuth shuffle algorithm)
