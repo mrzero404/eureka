@@ -107,6 +107,9 @@ public class Lease<T> {
      *
      * @param additionalLeaseMs any additional lease time to add to the lease evaluation in ms.
      */
+    //比对时间：上一次心跳时间 + 90s + 补偿时间（由于可能一些可能异常会导致这个调度延迟，所以需要加上这个延迟时间）
+    //比对时间大于当前时间说明实例正常（最后续约时间离当前比较近）
+    //比对时间小于当前时间说明实例异常（最后续约时间离当前比较远）
     public boolean isExpired(long additionalLeaseMs) {
         return (evictionTimestamp > 0 || System.currentTimeMillis() > (lastUpdateTimestamp + duration + additionalLeaseMs));
     }
