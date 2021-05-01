@@ -54,6 +54,13 @@ public class MeasuredRate {
                 public void run() {
                     try {
                         // Zero out the current bucket.
+                        // 每分钟调度一次
+                        // 调度时，将当前心跳次数设置到lastBucket，并把currentBucket清零重新作为计算的开始
+
+                        // currentBucket用来更新当前这一分钟的心跳次数
+                        // lastBucket用来保留上一分钟的心跳次数
+
+                        //isLeaseExpirationEnabled() -> 这里的lastBucket用来作为是否触发自我保护机制的条件
                         lastBucket.set(currentBucket.getAndSet(0));
                     } catch (Throwable e) {
                         logger.error("Cannot reset the Measured Rate", e);
