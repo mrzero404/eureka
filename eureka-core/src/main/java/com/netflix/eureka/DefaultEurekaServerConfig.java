@@ -395,12 +395,14 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
                 namespace + "syncWhenTimestampDiffers", true).get();
     }
 
+    //获取注册表同步重试次数（默认为5）
     @Override
     public int getRegistrySyncRetries() {
         return configInstance.getIntProperty(
                 namespace + "numberRegistrySyncRetries", 5).get();
     }
 
+    //获取注册表同步重试等待毫秒（默认30 * 1000 ms = 30s）
     @Override
     public long getRegistrySyncRetryWaitMs() {
         return configInstance.getIntProperty(

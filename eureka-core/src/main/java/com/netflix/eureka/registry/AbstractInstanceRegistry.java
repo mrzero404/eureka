@@ -187,7 +187,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     /**
      * Registers a new instance with a given duration.
-     *
+     * 注册具有给定持续时间的新实例
      * @see com.netflix.eureka.lease.LeaseManager#register(java.lang.Object, int, boolean)
      */
     public void register(InstanceInfo registrant, int leaseDuration, boolean isReplication) {
@@ -339,10 +339,10 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         synchronized (lock) {
             if (this.expectedNumberOfClientsSendingRenews > 0) {
                 // Since the client wants to cancel it, reduce the number of clients to send renews.
+                //由于客户端想要取消它，因此减少发送续订的客户端数量
                 this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews - 1;
                 updateRenewsPerMinThreshold();
-            }
-        }
+            }        }
 
         return true;
     }
@@ -591,6 +591,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     public void evict(long additionalLeaseMs) {
         logger.debug("Running the evict task");
 
+        //返回false直接返回，不摘除任何服务实例
         if (!isLeaseExpirationEnabled()) {
             logger.debug("DS: lease expiration is currently disabled.");
             return;
@@ -1197,6 +1198,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     protected void updateRenewsPerMinThreshold() {
+        //每分钟阈值的续订次数 = 预期发送续订的服务实例数量 客户数量 (60 / 预期的客户续订间隔秒数) * 续订百分比阈值（默认0.85）
+        //预期的客户续订间隔秒数 默认为30秒，60/30=2 ，所以一般为 （服务实例数量 * 2 * 0.85）
         this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews
                 * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())
                 * serverConfig.getRenewalPercentThreshold());
@@ -1252,6 +1255,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         private final AtomicLong lastExecutionNanosRef = new AtomicLong(0l);
 
         @Override
+        //摘除调度
         public void run() {
             try {
                 long compensationTimeMs = getCompensationTimeMs();

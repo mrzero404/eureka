@@ -189,7 +189,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
      * The renewal threshold would be used to determine if the renewals drop
      * dramatically because of network partition and to protect expiring too
      * many instances at a time.
-     *
+     * 默认15分钟调用一次，计算当前的（服务实例数量）与更新（每分钟阈值的续订次数），跟其他Eureka同步
      */
     private void scheduleRenewalThresholdUpdateTask() {
         timer.schedule(new TimerTask() {
@@ -211,9 +211,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
         // Copy entire entry from neighboring DS node
         int count = 0;
 
+        //getRegistrySyncRetries() -> 获取注册表同步重试次数（默认为5）
         for (int i = 0; ((i < serverConfig.getRegistrySyncRetries()) && (count == 0)); i++) {
             if (i > 0) {
                 try {
+                    //获取注册表同步重试等待毫秒（默认30 * 1000 ms = 30s）
                     Thread.sleep(serverConfig.getRegistrySyncRetryWaitMs());
                 } catch (InterruptedException e) {
                     logger.warn("Interrupted during registry transfer..");
@@ -224,7 +226,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
             for (Application app : apps.getRegisteredApplications()) {
                 for (InstanceInfo instance : app.getInstances()) {
                     try {
+                        //检查实例是否可以在该区域中注册。 来自其他区域的实例将被拒绝。
                         if (isRegisterable(instance)) {
+                            //将复制过来的服务实例注册到自己的注册表中
                             register(instance, instance.getLeaseInfo().getDurationInSecs(), true);
                             count++;
                         }
@@ -480,10 +484,15 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public boolean isLeaseExpirationEnabled() {
-        if (!isSelfPreservationModeEnabled()) {
+        //默认开启自我保护机制
+        if (!isSelfPreservationModeEnabled()) {//默认返回true，非运算后为false不返回判断中的true
             // The self preservation mode is disabled, hence allowing the instances to expire.
             return true;
         }
+        //numberOfRenewsPerMinThreshold -> 每分钟阈值的续订次数 (假设我期望的阈值是100次)
+        //getNumOfRenewsInLastMin() -> 获取最后一分钟的续订数量
+        //假设现在获取到最后一分钟的续订数为102次，那么 102 > 100 ，返回true，执行摘除动作
+        //假设现在获取到最后一分钟的续订数为98次，那么 98 < 100 ，返回false，不执行摘除动作
         return numberOfRenewsPerMinThreshold > 0 && getNumOfRenewsInLastMin() > numberOfRenewsPerMinThreshold;
     }
 
