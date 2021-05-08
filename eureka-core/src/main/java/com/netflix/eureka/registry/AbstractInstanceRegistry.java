@@ -386,6 +386,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
                 }
             }
+            //心跳次数+1
             renewsLastMin.increment();
             leaseToRenew.renew();
             return true;
@@ -1198,7 +1199,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     protected void updateRenewsPerMinThreshold() {
-        //每分钟阈值的续订次数 = 预期发送续订的服务实例数量 客户数量 (60 / 预期的客户续订间隔秒数) * 续订百分比阈值（默认0.85）
+        //每分钟阈值的续订次数 = 预期发送续订的服务实例数量 (60 / 预期的客户续订间隔秒数) * 续订百分比阈值（默认0.85）
         //预期的客户续订间隔秒数 默认为30秒，60/30=2 ，所以一般为 （服务实例数量 * 2 * 0.85）
         this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews
                 * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())
@@ -1229,6 +1230,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             evictionTaskRef.get().cancel();
         }
         evictionTaskRef.set(new EvictionTask());
+        //默认一分钟调取一次
         evictionTimer.schedule(evictionTaskRef.get(),
                 serverConfig.getEvictionIntervalTimerInMs(),
                 serverConfig.getEvictionIntervalTimerInMs());
