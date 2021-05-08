@@ -145,6 +145,7 @@ public class EurekaBootStrap implements ServletContextListener {
      * init hook for server context. Override for custom logic.
      */
     protected void initEurekaServerContext() throws Exception {
+        // 第一步：加载eureka-server.properties文件中的配置
         EurekaServerConfig eurekaServerConfig = new DefaultEurekaServerConfig();
 
         // For backward compatibility
@@ -155,6 +156,7 @@ public class EurekaBootStrap implements ServletContextListener {
         logger.info(eurekaServerConfig.getJsonCodecName());
         ServerCodecs serverCodecs = new DefaultServerCodecs(eurekaServerConfig);
 
+        // 第二步：初始化eureka-server内部的一个eureka-client（用来跟其他eureka-server节点进行注册和通信的）
         ApplicationInfoManager applicationInfoManager = null;
 
         if (eurekaClient == null) {
@@ -171,6 +173,7 @@ public class EurekaBootStrap implements ServletContextListener {
             applicationInfoManager = eurekaClient.getApplicationInfoManager();
         }
 
+        // 第三步：注册相关的服务实例
         PeerAwareInstanceRegistry registry;
         if (isAws(applicationInfoManager.getInfo())) {
             registry = new AwsInstanceRegistry(
@@ -199,7 +202,7 @@ public class EurekaBootStrap implements ServletContextListener {
                 applicationInfoManager
         );
 
-        //第五步：完成eureka
+        //第五步：完成eureka-server的上下文（context）的构建以及初始化
         serverContext = new DefaultEurekaServerContext(
                 eurekaServerConfig,
                 serverCodecs,
@@ -213,12 +216,14 @@ public class EurekaBootStrap implements ServletContextListener {
         serverContext.initialize();
         logger.info("Initialized server context");
 
+        // 第六点：处理一点善后的事情，从相邻的eureka节点拷贝注册信息
         // Copy registry from neighboring eureka node
         // 从相邻的eureka节点复制注册表，返回注册表中服务实例的总数
         int registryCount = registry.syncUp();
         registry.openForTraffic(applicationInfoManager, registryCount);
 
         // Register all monitoring statistics.
+        // 第七步：处理一点善后的事情，注册所有的监控统计项
         EurekaMonitors.registerAllStats();
     }
     
